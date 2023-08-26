@@ -33,7 +33,7 @@ def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=
 
 			# Use pandas read_csv with chunksize to process the CSV in chunks
 			for chunk in pd.read_csv(
-			    Path(vocab_file_dir) / csv, sep="\t", dtype=str, na_values="", encoding='utf-8', chunksize=chunk_size
+			    Path(vocab_file_dir) / csv, sep="\t", dtype=str, keep_default_na=False, na_values="", encoding='utf-8', chunksize=chunk_size
 			):
 				if csv.lower() in ["concept.csv", "concept_relationship.csv", "drug_strength.csv"]:
 					chunk['valid_start_date'] = pd.to_datetime(chunk['valid_start_date'], format='%Y%m%d')
