@@ -38,7 +38,6 @@ def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=
 				if csv.lower() in ["concept.csv", "concept_relationship.csv", "drug_strength.csv"]:
 					chunk['valid_start_date'] = pd.to_datetime(chunk['valid_start_date'], format='%Y%m%d')
 					chunk['valid_end_date'] = pd.to_datetime(chunk['valid_end_date'], format='%Y%m%d')
-					chunk['concept_name'] = chunk['concept_name'].fillna(0)
 
 				if csv.lower() == "drug_strength.csv":
 					columns_to_replace_na = [
