@@ -1,6 +1,7 @@
 # OMOP Vocabulary Loader
 
 Currently supports PostgreSQL only.
+This Python script is a modified version of the [LoadVocabFromCsv() from OHDSI/ETL-Synthea](https://github.com/OHDSI/ETL-Synthea/blob/main/R/LoadVocabFromCsv.r) written in R, licensed under the Apache License 2.0.
 
 ## What It Does
 
