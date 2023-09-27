@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 
 
-def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=1e4):
+def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=1e6):
 	print(f"Working on file {Path(vocab_file_dir) / csv}")
 	start_time = datetime.datetime.now()
 	print(f"Start time: {start_time}")
