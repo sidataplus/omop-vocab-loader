@@ -4,8 +4,7 @@ import psycopg2
 import psycopg2.extras
 from pathlib import Path
 import datetime
-import os
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
 
 def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=1e6):
@@ -93,18 +92,18 @@ def load_vocab_from_csv(connection_details, cdm_schema, vocab_file_dir):
 if __name__ == '__main__':
 
 	# Load environment variables from .env file
-	load_dotenv()
+	env = dotenv_values('.env')
 
 	# Retrieve environment variables
 	connection_details = {
-	    "server": os.getenv('SERVER'),
-	    "port": os.getenv('PORT'),
-	    "user": os.getenv('USERNAME'),
-	    "password": os.getenv('PASSWORD'),
-	    "dbname": os.getenv('DATABASE'),
+		"server": env['SERVER'],
+		"port": env['PORT'],
+		"user": env['USERNAME'],
+		"password": env['PASSWORD'],
+		"dbname": env['DATABASE']
 	}
-	cdm_schema = os.getenv('CDM_SCHEMA')
-	vocab_file_dir = os.getenv('VOCAB_FILE_DIR')
+	cdm_schema = env['CDM_SCHEMA']
+	vocab_file_dir = env['VOCAB_FILE_DIR']
 
 
 	load_vocab_from_csv(connection_details, cdm_schema, vocab_file_dir)
