@@ -6,6 +6,9 @@ from pathlib import Path
 import datetime
 from dotenv import dotenv_values
 
+def empty_table():
+	return env.get('DELETE_TABLES', True) in ['True', 'true', True, '1', 1]
+
 
 def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=1e6):
 	print(f"Working on file {Path(vocab_file_dir) / csv}")
@@ -26,9 +29,17 @@ def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=
 		    port=connection_details["port"]
 		)
 
-		table_name = f"{cdm_schema}.{csv.split('.')[0]}"
+		if cdm_schema != '':
+			table_name = f"{cdm_schema}.{csv.split('.')[0]}"
+		else:
+			table_name = f"{csv.split('.')[0]}"
+
 		with conn.cursor() as cur:
-			cur.execute(f"DELETE FROM {table_name};")
+			if table_exists(cur, table_name) and empty_table() == True:
+				try:
+					cur.execute(f"DELETE FROM {table_name};")
+				except Exception as e:
+					print(f"Error deleting data from {table_name}: {e}")
 
 			# Use pandas read_csv with chunksize to process the CSV in chunks
 			for chunk in pd.read_csv(

@@ -34,6 +34,7 @@ Download your vocabulary CSV files from the [Athena website](http://athena.ohdsi
    DATABASE=your_database_name
    CDM_SCHEMA=your_schema
    VOCAB_FILE_DIR=path_to_your_csv_files
+   DELETE_TABLES=True|False (default True)
    ```
 
    Replace the placeholders with your actual details.
