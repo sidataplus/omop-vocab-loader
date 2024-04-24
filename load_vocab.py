@@ -6,6 +6,54 @@ from pathlib import Path
 import datetime
 from dotenv import dotenv_values
 
+import os
+
+def table_exists(cur, table_name):
+    """Check if a table exists in the database."""
+    cur.execute("""
+        SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.tables
+            WHERE table_name = %s
+        )
+    """, (table_name,))
+    return cur.fetchone()[0]
+
+def empty_table():
+	return env.get('DELETE_TABLES', True) in ['True', 'true', True, '1', 1]
+
+def run_ddls(ddl_files):
+	env = dotenv_values('.env')
+
+	conn = psycopg2.connect(
+		    dbname=connection_details["dbname"],
+		    host=connection_details["server"],
+		    user=connection_details["user"],
+		    password=connection_details["password"],
+		    port=connection_details["port"]
+		)
+
+	folder_path = './ddl'
+	with conn.cursor() as cur:
+		for file_name in ddl_files:
+			file_content = ''
+			with open(folder_path + '/' + file_name, mode='r') as f:
+				print(file_name)
+				for line in f:
+					if env.get('CDM_SCHEMA') != '':
+						file_content += line.replace('\"cdmDatabaseSchema\"', env.get('\"CDM_SCHEMA\"'))
+					else:
+						file_content += line.replace('\"cdmDatabaseSchema\".', '')
+				try:	
+					cur.execute(file_content)
+					conn.commit()
+				except psycopg2.Error as e:
+					print(f"Database error while processing {file_name}: {e}")
+				except Exception as e:
+					print(f"Error processing {file_name}. Error: {e}")
+
+		conn.close()
+
 
 def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=1e6):
 	print(f"Working on file {Path(vocab_file_dir) / csv}")
@@ -26,9 +74,17 @@ def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=
 		    port=connection_details["port"]
 		)
 
-		table_name = f"{cdm_schema}.{csv.split('.')[0]}"
+		if cdm_schema != '':
+			table_name = f"{cdm_schema}.{csv.split('.')[0]}"
+		else:
+			table_name = f"{csv.split('.')[0]}"
+
 		with conn.cursor() as cur:
-			cur.execute(f"DELETE FROM {table_name};")
+			if table_exists(cur, table_name) and empty_table() == True:
+				try:
+					cur.execute(f"DELETE FROM {table_name};")
+				except Exception as e:
+					print(f"Error deleting data from {table_name}: {e}")
 
 			# Use pandas read_csv with chunksize to process the CSV in chunks
 			for chunk in pd.read_csv(
@@ -105,5 +161,19 @@ if __name__ == '__main__':
 	cdm_schema = env['CDM_SCHEMA']
 	vocab_file_dir = env['VOCAB_FILE_DIR']
 
+	if env.get('CREATE_TABLES', False) in ['True', 'true', True, '1', 1]:
+		ddl_files = [
+			'1_OMOPCDM_postgresql_5.4_ddl.sql', 
+			'2_OMOPCDM_postgresql_5.4_serials.sql', 
+			'3_OMOPCDM_postgresql_5.4_indices.sql', 
+			'4_OMOPCDM_postgresql_5.4_primary_keys.sql'
+		]
+		run_ddls(ddl_files)
 
 	load_vocab_from_csv(connection_details, cdm_schema, vocab_file_dir)
+
+	if env.get('CREATE_TABLES', False) in ['True', 'true', True, '1', 1]:
+		ddl_files = [
+			'5_OMOPCDM_postgresql_5.4_constraints.sql'
+		]
+		run_ddls(ddl_files)
