@@ -26,7 +26,11 @@ def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=
 		    port=connection_details["port"]
 		)
 
-		table_name = f"{cdm_schema}.{csv.split('.')[0]}"
+		if cdm_schema != '':
+			table_name = f"\"{cdm_schema}\".{csv.split('.')[0]}"
+		else:
+			table_name = f"{csv.split('.')[0]}"
+
 		with conn.cursor() as cur:
 			cur.execute(f"DELETE FROM {table_name};")
 
@@ -50,8 +54,10 @@ def process_csv(csv, connection_details, cdm_schema, vocab_file_dir, chunk_size=
 				tuples = [tuple(x) for x in chunk.to_numpy()]
 				cols = ','.join(list(chunk.columns))
 				query = f"INSERT INTO {table_name}({cols}) VALUES %s"
+		
 				psycopg2.extras.execute_values(cur, query, tuples, template=None, page_size=1000)
-
+				
+			
 				processed_lines += len(chunk)
 				print(f"Processed lines: {processed_lines}, Remaining lines: {total_lines - processed_lines}")
 
